@@ -229,8 +229,17 @@ describe('Runner', function(){
       runner.fail(test, err);
     })
 
-    it('should emit a the error when failed with an Error', function(done){
+    it('should emit a the error when failed with an Error instance', function(done){
       var test = {}, err = new Error('an error message');
+      runner.on('fail', function(test, err){
+        err.message.should.equal('an error message');
+        done();
+      });
+      runner.fail(test, err);
+    })
+
+    it('should emit the error when failed with an Error-like object', function(done){
+      var test = {}, err = {message: 'an error message'};
       runner.on('fail', function(test, err){
         err.message.should.equal('an error message');
         done();
@@ -264,6 +273,19 @@ describe('Runner', function(){
       runner.failures.should.equal(1);
       runner.failHook({}, {});
       runner.failures.should.equal(2);
+    })
+
+    it('should augment hook title with current test title', function(){
+      var hook = {
+        title: '"before each" hook',
+        ctx: { currentTest: new Test('should behave') }
+      };
+      runner.failHook(hook, {});
+      hook.title.should.equal('"before each" hook for "should behave"');
+
+      hook.ctx.currentTest = new Test('should obey');
+      runner.failHook(hook, {});
+      hook.title.should.equal('"before each" hook for "should obey"');
     })
 
     it('should emit "fail"', function(done){
